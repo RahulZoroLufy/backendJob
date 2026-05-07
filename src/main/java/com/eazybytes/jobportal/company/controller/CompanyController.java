@@ -1,16 +1,30 @@
 package com.eazybytes.jobportal.company.controller;
 
+import com.eazybytes.jobportal.dto.CompanyDto;
+import com.eazybytes.jobportal.company.service.ICompanyService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/companies")
+//@CrossOrigin(origins = {"https://localhost:5137", ""})
 public class CompanyController {
 
-    @GetMapping(version = "1.0")
-    public ResponseEntity<String> getAllCompanies() {
-        return ResponseEntity.ok().body("All Companies updated");
+    private final ICompanyService companyService;
+
+    public CompanyController(ICompanyService companyService) {
+        this.companyService = companyService;
     }
+
+    @GetMapping(version = "1.0")
+    public ResponseEntity<List<CompanyDto>> getAllCompanies() {
+        List<CompanyDto> companiesList=  companyService.getAllCompanies();
+        return ResponseEntity.ok().body(companiesList);
+    }
+
+
 }
