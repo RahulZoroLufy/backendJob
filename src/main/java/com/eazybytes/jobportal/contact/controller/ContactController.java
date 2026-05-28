@@ -19,7 +19,7 @@ public class ContactController {
         this.contactService = contactService;
     }
 
-    @PostMapping(version = "1.0")
+    @PostMapping(path = "/public", version = "1.0")
     public ResponseEntity<String> saveContactMag(@RequestBody @Valid ContactRequestDto contactRequestDto) {
         boolean isSaved =  contactService.saveContact(contactRequestDto);
         if (isSaved) {

@@ -19,14 +19,4 @@ public class WebConfig implements WebMvcConfigurer {
         configurer.addPathPrefix("/api",_->true);//un nameed variable is (_) this is java new feature
     }
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:5173")
-                .allowedMethods("*")
-                .allowedHeaders("*")
-                .exposedHeaders("*")
-                .allowCredentials(true).maxAge(3600);
-    }
-
 }
