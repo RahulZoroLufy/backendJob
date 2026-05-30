@@ -23,14 +23,13 @@ public class JwtUtil {
 
     public String generateJwtToken(Authentication authentication){
         String jwtToken;
+
         String secret = env.getProperty(ApplicationConstants.JWT_SECRET_KEY,
                 ApplicationConstants.JWT_SECRET_DEFAULT_VALUE);
         SecretKey secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        var fetchedUser = (JobPortalUser) authentication.getPrincipal();
+        var fetchedUser = (User) authentication.getPrincipal();
         jwtToken = Jwts.builder().issuer("Job Portal").subject("JWT Token")
-                .claim("name", fetchedUser.getName())
-                .claim("email", fetchedUser.getEmail())
-                .claim("mobileNumber", fetchedUser.getMobileNumber())
+                .claim("name", fetchedUser.getUsername())
                 .claim("roles", authentication.getAuthorities().stream().map(
                         GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
                 .issuedAt(new java.util.Date())
