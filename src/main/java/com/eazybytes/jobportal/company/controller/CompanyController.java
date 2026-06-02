@@ -1,7 +1,10 @@
 package com.eazybytes.jobportal.company.controller;
 
+import com.eazybytes.jobportal.aspects.LogAspect;
 import com.eazybytes.jobportal.dto.CompanyDto;
 import com.eazybytes.jobportal.company.service.ICompanyService;
+import lombok.Locked;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +23,7 @@ public class CompanyController {
         this.companyService = companyService;
     }
 
+//    @LogAspect
     @GetMapping(path = "/public", version = "1.0")
     public ResponseEntity<List<CompanyDto>> getAllCompanies() {
         List<CompanyDto> companiesList=  companyService.getAllCompanies();

@@ -51,6 +51,10 @@ public class AuthController {
             // Generate JWT token
             String jwtToken = jwtUtil.generateJwtToken(resultAuthentication);
             var userDto = new UserDto();
+            var loggedInUser = (JobPortalUser) resultAuthentication.getPrincipal();
+            BeanUtils.copyProperties(loggedInUser, userDto);
+            userDto.setRole(loggedInUser.getRole().getName());
+            userDto.setUserId(loggedInUser.getId());
             return ResponseEntity.status(HttpStatus.OK)
                     .body(new LoginResponseDto(HttpStatus.OK.getReasonPhrase(),
                             userDto, jwtToken));
@@ -64,40 +68,10 @@ public class AuthController {
             return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
                     "An unexpected error occurred");
         }
-
     }
 
-
     @PostMapping(value = "/register/public",version = "1.0")
-    public ResponseEntity<?> apiLogin(@RequestBody RegisterRequestDto registerRequestDto) {
-
-        CompromisedPasswordDecision compromisedPasswordDecision =compromisedPasswordChecker
-                .check(registerRequestDto.password());
-
-        if(compromisedPasswordDecision.isCompromised()){
-            ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("password", "Choose a Strong password"));
-        }
-
-
-        Optional<JobPortalUser>existingUser =jobPortalUserRepository.readUserByEmailOrMobileNumber(registerRequestDto.email(),
-                registerRequestDto.mobileNumber());
-
-        if(existingUser.isPresent()) {
-            Map<String,String> errors = new HashMap<>();
-            JobPortalUser jobPortalUser = existingUser.get();
-
-            if(jobPortalUser.getEmail().equalsIgnoreCase(registerRequestDto.email())) {
-                errors.put("email", "email already exists");
-            }
-            if(jobPortalUser.getMobileNumber().equalsIgnoreCase(registerRequestDto.mobileNumber())) {
-                errors.put("mobileNumber", "mobile number already exists");
-            }
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.toString());
-
-        }
-
+    public ResponseEntity<?> registerUser(@RequestBody RegisterRequestDto registerRequestDto) {
         JobPortalUser jobPortalUser = new JobPortalUser();
         BeanUtils.copyProperties(registerRequestDto, jobPortalUser);
         jobPortalUser.setPasswordHash(passwordEncoder.encode(registerRequestDto.password()));

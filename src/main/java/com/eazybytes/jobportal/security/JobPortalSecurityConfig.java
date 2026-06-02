@@ -2,6 +2,8 @@ package com.eazybytes.jobportal.security;
 
 import com.eazybytes.jobportal.audit.AuditorAwareImpl;
 import com.eazybytes.jobportal.security.filter.JwtTokenValidatorFilter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -10,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.authentication.password.CompromisedPasswordChecker;
@@ -24,6 +27,10 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
+import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -32,6 +39,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -47,8 +55,16 @@ public class JobPortalSecurityConfig {
     private final List<String> securedPaths;
 
     @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
     SecurityFilterChain customSecurityFilterChain(HttpSecurity http) {
-        return http.csrf(csrfConfig -> csrfConfig.disable())
+        return http
+                .csrf(csrfConfig->csrfConfig.
+                        csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new XorCsrfTokenRequestAttributeHandler()))
                 .cors(corsConfig -> corsConfig.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(requests -> {
                     publicPaths.forEach(path -> requests.requestMatchers(path).permitAll());
@@ -74,22 +90,10 @@ public class JobPortalSecurityConfig {
         return source;
     }
 
-    @Bean
-    public UserDetailsService userDetailsService() {
-        var user1 = User.builder().username("madan")
-                .password(passwordEncoder().encode("madan"))
-                .roles("USER").build();
-        var user2 = User.builder().username("admin")
-                .password("$2a$10$h0tXkljuujVQtApsrFTkPu.kKYDGUcfb2f5nMldNE0dg.eztSTLae")
-                .roles("ADMIN").build();
-        return new InMemoryUserDetailsManager(user1, user2);
-    }
 
     @Bean
-    public AuthenticationManager authenticationManager() {
-        var autheticationProvider = new DaoAuthenticationProvider(userDetailsService());
-        autheticationProvider.setPasswordEncoder(passwordEncoder());
-        return new ProviderManager(autheticationProvider);
+    public AuthenticationManager authenticationManager(AuthenticationProvider authenticationProvider) {
+        return new ProviderManager(authenticationProvider);
     }
 
     @Bean
@@ -97,8 +101,5 @@ public class JobPortalSecurityConfig {
         return new HaveIBeenPwnedRestApiPasswordChecker();
         }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+
 }
